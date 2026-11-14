@@ -31,6 +31,12 @@ create trigger on_auth_user_created
     after insert on auth.users
     for each row execute function public.handle_new_teacher();
 
+-- Sync any existing auth.users into public.teachers
+insert into public.teachers (id, email, full_name)
+select id, email, coalesce(raw_user_meta_data->>'full_name', split_part(email, '@', 1))
+from auth.users
+on conflict (id) do nothing;
+
 -- 3. Tests Table
 create table if not exists public.tests (
     id uuid primary key default gen_random_uuid(),
