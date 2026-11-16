@@ -191,6 +191,12 @@ export default function StudentLandingPage() {
                     Ruxsat etilgan limit: <strong>{testInfo?.max_violations}</strong> ta qoidabuzarlik. Limit tugasa, test avtomatik topshiriladi.
                   </span>
                 </li>
+                <li className="flex items-start gap-2 text-amber-400/90 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                  <span>
+                    Ekranning chetidan &quot;orqaga&quot; surish (swipe) jestini qilmang va bildirishnomalarni ochmang — bu sahifadan chiqish deb qayd etiladi.
+                  </span>
+                </li>
               </ul>
               <div className="pt-2 border-t border-border/60 text-[11px] text-muted-foreground/80 italic">
                 {t.student.honestyNotice}

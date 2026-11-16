@@ -47,6 +47,11 @@ html.dark {
   --accent-subtle: rgba(139, 92, 246, 0.12);
 }
 
+html {
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -54,6 +59,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.011em;
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
 }
 
 /* Mobile-first safe area insets */

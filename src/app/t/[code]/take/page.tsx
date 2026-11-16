@@ -8,6 +8,7 @@ import { MathKeyboard } from '@/components/MathKeyboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AntiCheatModal } from '@/components/AntiCheatModal';
 import { useExamGuard } from '@/hooks/useExamGuard';
+import { compressImage } from '@/lib/imageCompressor';
 import { Question } from '@/types';
 import {
   Clock,
@@ -18,6 +19,9 @@ import {
   AlertCircle,
   Upload,
   Flag,
+  LayoutGrid,
+  X,
+  Eye,
 } from 'lucide-react';
 
 export default function StudentTakePage() {
@@ -41,12 +45,28 @@ export default function StudentTakePage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showGridDrawer, setShowGridDrawer] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mobile virtual keyboard viewport listener
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const handleViewportResize = () => {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        setTimeout(() => {
+          activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 120);
+      }
+    };
+    window.visualViewport.addEventListener('resize', handleViewportResize);
+    return () => window.visualViewport?.removeEventListener('resize', handleViewportResize);
+  }, []);
 
   // Load initial test data
   useEffect(() => {
@@ -242,8 +262,11 @@ export default function StudentTakePage() {
 
     setUploadingPhoto(true);
     try {
+      // Compress image client-side before uploading (resizes 10MB camera photo to ~400KB)
+      const compressedFile = await compressImage(file, 1600, 0.8);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('attempt_id', attemptId);
       formData.append('question_id', currentQ.id);
 
@@ -402,27 +425,40 @@ export default function StudentTakePage() {
         }`}
       >
         {/* Question Navigator Drawer/Grid */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
-          {questions.map((q, idx) => {
-            const isAnswered = q.id && answers[q.id]?.value?.trim();
-            const isCurrent = idx === currentIndex;
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setCurrentIndex(idx)}
-                className={`touch-target w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs flex items-center justify-center border transition-all flex-shrink-0 ${
-                  isCurrent
-                    ? 'border-accent bg-accent text-accent-foreground shadow-glow scale-105'
-                    : isAnswered
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                    : 'border-border/80 bg-card text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowGridDrawer(true)}
+            className="touch-target h-9 sm:h-10 px-2.5 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground flex items-center gap-1.5 flex-shrink-0 transition-all active:scale-95 text-xs font-semibold"
+            title="Barcha savollar jadvali"
+            aria-label="Barcha savollar jadvali"
+          >
+            <LayoutGrid className="w-4 h-4 text-accent" />
+            <span className="hidden sm:inline">Ro&apos;yxat</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar flex-1">
+            {questions.map((q, idx) => {
+              const isAnswered = q.id && answers[q.id]?.value?.trim();
+              const isCurrent = idx === currentIndex;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`touch-target w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs flex items-center justify-center border transition-all flex-shrink-0 ${
+                    isCurrent
+                      ? 'border-accent bg-accent text-accent-foreground shadow-glow scale-105'
+                      : isAnswered
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                      : 'border-border/80 bg-card text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Current Question Card */}
@@ -498,7 +534,7 @@ export default function StudentTakePage() {
 
           {/* Open Auto (numeric/short text) */}
           {currentQ.type === 'open_auto' && (
-            <div className="space-y-4 pt-1">
+            <div className="space-y-3 pt-1">
               <input
                 type="text"
                 value={currentAnswer?.value || ''}
@@ -506,6 +542,30 @@ export default function StudentTakePage() {
                 placeholder={t.student.openAnswerPlaceholder}
                 className="w-full touch-target px-4 rounded-2xl border border-border/80 bg-background/80 focus:outline-none focus:ring-2 focus:ring-accent text-foreground text-base font-mono transition-all"
               />
+
+              {currentAnswer?.value?.trim() && (
+                <div className="p-3 rounded-2xl bg-card border border-border/70 flex items-center gap-2.5 shadow-subtle">
+                  <div className="w-6 h-6 rounded-lg bg-accent-subtle text-accent flex items-center justify-center flex-shrink-0">
+                    <Eye className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
+                      Ko&apos;rinishi
+                    </span>
+                    <div className="text-sm font-medium text-foreground overflow-x-auto py-0.5">
+                      <MathRenderer
+                        content={
+                          currentAnswer.value.includes('$')
+                            ? currentAnswer.value
+                            : `$${currentAnswer.value}$`
+                        }
+                        inline
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <MathKeyboard onInsert={handleInsertMath} />
             </div>
           )}
@@ -520,6 +580,24 @@ export default function StudentTakePage() {
                 placeholder={t.student.manualAnswerPlaceholder}
                 className="w-full p-4 rounded-2xl border border-border/80 bg-background/80 focus:outline-none focus:ring-2 focus:ring-accent text-foreground text-sm transition-all"
               />
+
+              {currentAnswer?.value?.trim() && (
+                <div className="p-3 rounded-2xl bg-card border border-border/70 space-y-1 shadow-subtle">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    <Eye className="w-3.5 h-3.5 text-accent" />
+                    <span>Ko&apos;rinishi</span>
+                  </div>
+                  <div className="text-sm font-medium text-foreground overflow-x-auto py-0.5">
+                    <MathRenderer
+                      content={
+                        currentAnswer.value.includes('$')
+                          ? currentAnswer.value
+                          : `$${currentAnswer.value}$`
+                      }
+                    />
+                  </div>
+                </div>
+              )}
 
               <MathKeyboard onInsert={handleInsertMath} />
 
@@ -589,6 +667,78 @@ export default function StudentTakePage() {
           </button>
         )}
       </footer>
+
+      {/* Question Grid Drawer Modal */}
+      {showGridDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-border/70">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-accent-subtle text-accent flex items-center justify-center">
+                  <LayoutGrid className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-sm sm:text-base">Barcha savollar jadvali</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGridDrawer(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Yopish"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span>Javob berilgan ({answeredCount})</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-border" />
+                <span>Kutilmoqda ({questions.length - answeredCount})</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2.5 overflow-y-auto py-2 pr-1 flex-1">
+              {questions.map((q, idx) => {
+                const isAnswered = q.id && answers[q.id]?.value?.trim();
+                const isCurrent = idx === currentIndex;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setCurrentIndex(idx);
+                      setShowGridDrawer(false);
+                    }}
+                    className={`touch-target h-12 rounded-xl font-bold text-xs sm:text-sm flex flex-col items-center justify-center border transition-all ${
+                      isCurrent
+                        ? 'border-accent bg-accent text-accent-foreground shadow-glow scale-105'
+                        : isAnswered
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                        : 'border-border/80 bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <span>{idx + 1}</span>
+                    <span className="text-[9px] opacity-70">{q.points} b</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="pt-2 border-t border-border/70 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowGridDrawer(false)}
+                className="px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold transition-colors"
+              >
+                Yopish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Finish Confirmation Dialog */}
       {showFinishConfirm && (
