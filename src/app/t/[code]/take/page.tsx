@@ -48,6 +48,7 @@ export default function StudentTakePage() {
   const [showGridDrawer, setShowGridDrawer] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [teacherWarning, setTeacherWarning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -173,6 +174,10 @@ export default function StudentTakePage() {
     requireFullscreen,
     initialViolationsCount: initialViolations,
     isActive: !loading && !submitting && remainingSeconds !== null && remainingSeconds > 0,
+    currentQuestionIndex: currentIndex,
+    onTeacherWarning: (msg) => {
+      setTeacherWarning(msg);
+    },
     onAutoSubmit: () => {
       localStorage.setItem('exam_final_status', 'auto_submitted');
       router.push(`/t/${code}/done`);
@@ -339,7 +344,29 @@ export default function StudentTakePage() {
   const progressPercent = Math.round((answeredCount / questions.length) * 100);
 
   return (
-    <div className="min-h-screen flex flex-col justify-between max-w-2xl mx-auto p-4 sm:p-6 no-select">
+    <div className="min-h-screen flex flex-col justify-between max-w-2xl mx-auto p-4 sm:p-6 no-select relative">
+      {/* Teacher Warning Banner */}
+      {teacherWarning && (
+        <div className="fixed top-4 left-4 right-4 z-50 max-w-lg mx-auto animate-in slide-in-from-top-4 duration-200">
+          <div className="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/60 text-amber-300 shadow-2xl backdrop-blur-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 text-xs space-y-1">
+              <span className="font-bold uppercase tracking-wider block text-amber-400">
+                Ustoz ogohlantirishi
+              </span>
+              <p className="leading-relaxed font-medium">{teacherWarning}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTeacherWarning(null)}
+              className="p-1 rounded-lg text-amber-400/80 hover:text-amber-300 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Sticky Top Bar */}
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl -mx-4 sm:-mx-6 px-4 sm:px-6 pt-2 pb-3 border-b border-border/70 safe-pt space-y-2">
         <div className="flex items-center justify-between gap-3">

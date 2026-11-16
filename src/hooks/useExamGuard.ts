@@ -11,6 +11,8 @@ interface UseExamGuardOptions {
   initialViolationsCount?: number;
   isActive: boolean;
   onAutoSubmit: () => void;
+  currentQuestionIndex?: number;
+  onTeacherWarning?: (message: string) => void;
 }
 
 export function useExamGuard({
@@ -21,6 +23,8 @@ export function useExamGuard({
   initialViolationsCount = 0,
   isActive,
   onAutoSubmit,
+  currentQuestionIndex,
+  onTeacherWarning,
 }: UseExamGuardOptions) {
   const [violationsCount, setViolationsCount] = useState<number>(initialViolationsCount);
   const [isWarningOpen, setIsWarningOpen] = useState(false);
@@ -296,7 +300,7 @@ export function useExamGuard({
     };
   }, [isActive, attemptId, reportViolation]);
 
-  // 8. Server Heartbeat (every 12 seconds)
+  // 8. Server Heartbeat (every 5 seconds for real-time live proctoring)
   useEffect(() => {
     if (!isActive || !attemptId || !deviceToken) return;
 
@@ -308,23 +312,28 @@ export function useExamGuard({
           body: JSON.stringify({
             attempt_id: attemptId,
             device_token: deviceToken,
+            current_question_index: currentQuestionIndex,
           }),
         });
         const data = await res.json();
         if (data.is_active === false) {
           onAutoSubmit();
         }
+        if (data.warning && onTeacherWarning) {
+          onTeacherWarning(data.warning);
+        }
       } catch (err) {
         console.warn('Heartbeat ping failed:', err);
       }
     };
 
-    heartbeatIntervalRef.current = setInterval(sendHeartbeat, 12000);
+    sendHeartbeat();
+    heartbeatIntervalRef.current = setInterval(sendHeartbeat, 5000);
 
     return () => {
       if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
     };
-  }, [isActive, attemptId, deviceToken, onAutoSubmit]);
+  }, [isActive, attemptId, deviceToken, onAutoSubmit, currentQuestionIndex, onTeacherWarning]);
 
   const dismissWarning = () => {
     setIsWarningOpen(false);

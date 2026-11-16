@@ -22,6 +22,7 @@ import {
   Share2,
   Layers,
   Power,
+  Radio,
 } from 'lucide-react';
 
 export default function TeacherDashboardPage() {
@@ -298,6 +299,15 @@ export default function TeacherDashboardPage() {
                       </>
                     )}
                   </button>
+
+                  <Link
+                    href={`/teacher/tests/${test.id}/live`}
+                    className="touch-target px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-all flex items-center gap-1.5"
+                    title={t.teacher.liveMonitoring}
+                  >
+                    <Radio className="w-3.5 h-3.5 animate-pulse" />
+                    <span>{t.teacher.liveRoom}</span>
+                  </Link>
 
                   <Link
                     href={`/teacher/tests/${test.id}/results`}

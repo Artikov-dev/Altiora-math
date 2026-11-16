@@ -17,6 +17,7 @@ import {
   Filter,
   BarChart3,
   TrendingUp,
+  Radio,
 } from 'lucide-react';
 
 interface AttemptRow {
@@ -152,6 +153,15 @@ export default function TeacherTestResultsPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link
+            href={`/teacher/tests/${testId}/live`}
+            className="touch-target px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-all flex items-center gap-1.5"
+            title="Jonli imtihon zalini ochish"
+          >
+            <Radio className="w-3.5 h-3.5 animate-pulse" />
+            <span className="hidden sm:inline">Jonli zal</span>
+          </Link>
+
           <ThemeToggle />
           <a
             href={`/api/teacher/tests/${testId}/export`}

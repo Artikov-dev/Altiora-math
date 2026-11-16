@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabaseAdmin';
 import { checkAnswer } from '@/lib/answerChecker';
+import { liveHeartbeats } from '@/lib/liveProctoringState';
 
 export async function POST(request: Request) {
   try {
@@ -40,6 +41,13 @@ export async function POST(request: Request) {
       type,
       duration_ms: Number(duration_ms) || 0,
       meta: meta || {},
+    });
+
+    const currentHb = liveHeartbeats.get(attempt.id);
+    liveHeartbeats.set(attempt.id, {
+      lastPing: Date.now(),
+      currentQuestionIndex: currentHb?.currentQuestionIndex,
+      isAway: type === 'tab_switch' || type === 'window_blur' || type === 'fullscreen_exit',
     });
 
     // 3. Count total violations for this attempt
