@@ -74,6 +74,7 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
   );
 
   const [activeMathTarget, setActiveMathTarget] = useState<{ qIndex: number; optIndex?: number } | null>(null);
+  const [showMathToolbar, setShowMathToolbar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -473,11 +474,6 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
           </div>
         </div>
 
-        {/* Math Keyboard helper bar */}
-        <div className="sticky top-2 z-20 shadow-lg">
-          <MathKeyboard onInsert={handleInsertMath} />
-        </div>
-
         {/* Section 3: Questions Builder */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -486,12 +482,24 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
               <span>{t.builder.questionsSection} ({questions.length})</span>
             </h2>
 
-            {/* Add question buttons */}
+            {/* Action toolbar */}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
+                onClick={() => setShowMathToolbar(!showMathToolbar)}
+                className={`touch-target px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+                  showMathToolbar
+                    ? 'border-accent bg-accent text-accent-foreground shadow-subtle'
+                    : 'border-border bg-card hover:bg-muted text-muted-foreground'
+                }`}
+              >
+                <span>∑ Formulalar</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleAddQuestion('multiple_choice')}
-                className="touch-target px-3.5 py-2 rounded-xl text-xs font-semibold bg-accent-subtle hover:bg-accent/25 text-accent border border-accent/30 flex items-center gap-1.5 transition-all"
+                className="touch-target px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-accent-subtle hover:bg-accent/25 text-accent border border-accent/30 flex items-center gap-1.5 transition-all"
               >
                 <Plus className="w-4 h-4" />
                 <span>{t.builder.addMultipleChoice}</span>
@@ -500,7 +508,7 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
               <button
                 type="button"
                 onClick={() => handleAddQuestion('open_auto')}
-                className="touch-target px-3.5 py-2 rounded-xl text-xs font-semibold bg-card hover:bg-muted text-foreground border border-border flex items-center gap-1.5 transition-all"
+                className="touch-target px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-card hover:bg-muted text-foreground border border-border flex items-center gap-1.5 transition-all"
               >
                 <ListOrdered className="w-4 h-4" />
                 <span>{t.builder.addOpenAuto}</span>
@@ -509,13 +517,20 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
               <button
                 type="button"
                 onClick={() => handleAddQuestion('open_manual')}
-                className="touch-target px-3.5 py-2 rounded-xl text-xs font-semibold bg-card hover:bg-muted text-foreground border border-border flex items-center gap-1.5 transition-all"
+                className="touch-target px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-card hover:bg-muted text-foreground border border-border flex items-center gap-1.5 transition-all"
               >
                 <FileText className="w-4 h-4" />
                 <span>{t.builder.addOpenManual}</span>
               </button>
             </div>
           </div>
+
+          {/* Collapsible Math Keyboard Toolbar */}
+          {showMathToolbar && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+              <MathKeyboard onInsert={handleInsertMath} />
+            </div>
+          )}
 
           {/* Questions list */}
           <div className="space-y-6">

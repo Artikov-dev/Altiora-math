@@ -17,7 +17,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Upload,
-  Check,
   Flag,
 } from 'lucide-react';
 
@@ -319,13 +318,15 @@ export default function StudentTakePage() {
   return (
     <div className="min-h-screen flex flex-col justify-between max-w-2xl mx-auto p-4 sm:p-6 no-select">
       {/* Sticky Top Bar */}
-      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-md pt-2 pb-3 border-b border-border space-y-2 safe-pt">
-        <div className="flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl -mx-4 sm:-mx-6 px-4 sm:px-6 pt-2 pb-3 border-b border-border/70 safe-pt space-y-2">
+        <div className="flex items-center justify-between gap-3">
           {/* Student name & test title */}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <User className="w-4 h-4 text-accent flex-shrink-0" />
-            <div className="truncate max-w-[140px] sm:max-w-[200px]">
-              <span className="font-semibold text-xs sm:text-sm block truncate">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-accent-subtle text-accent flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4" />
+            </div>
+            <div className="truncate max-w-[130px] sm:max-w-[200px]">
+              <span className="font-semibold text-xs sm:text-sm block truncate text-foreground">
                 {studentName}
               </span>
               {testTitle && (
@@ -336,24 +337,24 @@ export default function StudentTakePage() {
             </div>
           </div>
 
-          {/* Synced Timer */}
+          {/* Centered Minimalist Synced Timer */}
           <div
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-mono text-sm font-bold border transition-colors ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-mono text-xs sm:text-sm font-bold border transition-all ${
               remainingSeconds !== null && remainingSeconds < 300
-                ? 'bg-danger/15 text-danger border-danger/30 animate-pulse'
-                : 'bg-card text-foreground border-border'
+                ? 'bg-danger/10 text-danger border-danger/30 animate-pulse'
+                : 'bg-card text-foreground border-border/80 shadow-subtle'
             }`}
           >
-            <Clock className="w-4 h-4" />
+            <Clock className="w-3.5 h-3.5" />
             <span>{remainingSeconds !== null ? formatTime(remainingSeconds) : '--:--'}</span>
           </div>
 
           {/* Theme & Finish Header Button */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             <button
               onClick={() => setShowFinishConfirm(true)}
-              className="touch-target px-3 py-1.5 rounded-xl bg-accent-subtle hover:bg-accent/25 text-accent text-xs font-bold border border-accent/30 transition-all flex items-center gap-1"
+              className="touch-target px-3.5 py-1.5 rounded-xl bg-accent-subtle hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/20 transition-all flex items-center gap-1 active:scale-95"
             >
               <Flag className="w-3.5 h-3.5" />
               <span>{t.student.finish}</span>
@@ -361,19 +362,29 @@ export default function StudentTakePage() {
           </div>
         </div>
 
-        {/* Question progress and autosave indicator */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+        {/* Flush progress line and save indicator */}
+        <div className="space-y-1 pt-1">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>
               {t.student.question} {currentIndex + 1} / {questions.length}
             </span>
-            <span className="text-[11px] font-mono">
-              {saveStatus === 'saving' && <span className="text-amber-400">{t.student.autosaving}</span>}
-              {saveStatus === 'saved' && <span className="text-emerald-400 flex items-center gap-1"><Check className="w-3 h-3" /> {t.student.autosaved}</span>}
+            <span className="font-mono flex items-center gap-1">
+              {saveStatus === 'saving' && (
+                <span className="text-amber-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  {t.student.autosaving}
+                </span>
+              )}
+              {saveStatus === 'saved' && (
+                <span className="text-emerald-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  {t.student.autosaved}
+                </span>
+              )}
               {saveStatus === 'idle' && `${progressPercent}%`}
             </span>
           </div>
-          <div className="w-full h-1.5 bg-card rounded-full overflow-hidden border border-border">
+          <div className="w-full h-1 bg-border/40 rounded-full overflow-hidden">
             <div
               className="h-full bg-accent transition-all duration-300 rounded-full"
               style={{ width: `${progressPercent}%` }}
@@ -384,14 +395,14 @@ export default function StudentTakePage() {
 
       {/* Main Question Display */}
       <main
-        className={`my-auto py-4 space-y-6 flex-1 transition-all duration-200 ${
+        className={`my-auto py-4 space-y-5 flex-1 transition-all duration-200 ${
           isWarningOpen || isFullscreenBlocked || isMultiTabBlocked
             ? 'filter blur-lg pointer-events-none select-none'
             : ''
         }`}
       >
         {/* Question Navigator Drawer/Grid */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar">
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
           {questions.map((q, idx) => {
             const isAnswered = q.id && answers[q.id]?.value?.trim();
             const isCurrent = idx === currentIndex;
@@ -400,12 +411,12 @@ export default function StudentTakePage() {
                 key={idx}
                 type="button"
                 onClick={() => setCurrentIndex(idx)}
-                className={`touch-target w-10 h-10 rounded-xl font-bold text-xs flex items-center justify-center border transition-all flex-shrink-0 ${
+                className={`touch-target w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs flex items-center justify-center border transition-all flex-shrink-0 ${
                   isCurrent
-                    ? 'border-accent bg-accent text-accent-foreground shadow-md scale-105'
+                    ? 'border-accent bg-accent text-accent-foreground shadow-glow scale-105'
                     : isAnswered
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                    : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                    : 'border-border/80 bg-card text-muted-foreground hover:bg-muted'
                 }`}
               >
                 {idx + 1}
@@ -415,24 +426,24 @@ export default function StudentTakePage() {
         </div>
 
         {/* Current Question Card */}
-        <div className="bg-card border border-border rounded-3xl p-5 sm:p-7 shadow-lg space-y-6">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <span className="text-xs font-bold text-accent uppercase tracking-wider">
+        <div className="bg-card border border-border/80 rounded-3xl p-5 sm:p-7 shadow-card space-y-6">
+          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+            <span className="text-xs font-semibold text-accent uppercase tracking-wider">
               {t.student.question} {currentIndex + 1}
             </span>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-muted text-muted-foreground">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
               {currentQ.points} ball
             </span>
           </div>
 
           {/* Question Prompt with KaTeX */}
-          <div className="text-base sm:text-lg font-serif leading-relaxed text-foreground">
+          <div className="text-base sm:text-lg leading-relaxed text-foreground font-sans">
             <MathRenderer content={currentQ.prompt} />
           </div>
 
           {/* Question Image if present */}
           {currentQ.image_url && (
-            <div className="rounded-2xl overflow-hidden border border-border">
+            <div className="rounded-2xl overflow-hidden border border-border/60">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={currentQ.image_url}
@@ -444,7 +455,7 @@ export default function StudentTakePage() {
 
           {/* Multiple choice options */}
           {currentQ.type === 'multiple_choice' && (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2.5 pt-1">
               {currentQ.options?.map((opt, optIdx) => {
                 const isSelected = currentAnswer?.value === opt.id;
                 return (
@@ -452,23 +463,32 @@ export default function StudentTakePage() {
                     key={opt.id || optIdx}
                     type="button"
                     onClick={() => opt.id && handleUpdateCurrentAnswer(opt.id)}
-                    className={`w-full touch-target text-left p-4 rounded-2xl border transition-all flex items-center gap-3.5 ${
+                    className={`w-full touch-target text-left p-3.5 sm:p-4 rounded-2xl border transition-all flex items-center gap-3.5 active:scale-[0.99] ${
                       isSelected
-                        ? 'border-accent bg-accent-subtle shadow-md ring-2 ring-accent'
-                        : 'border-border bg-background hover:bg-muted/60'
+                        ? 'border-accent bg-accent-subtle shadow-subtle ring-1 ring-accent'
+                        : 'border-border/70 bg-background/60 hover:bg-muted/60'
                     }`}
                   >
-                    <span
-                      className={`w-8 h-8 rounded-xl font-bold text-sm flex items-center justify-center flex-shrink-0 transition-colors ${
+                    <div
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center flex-shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-accent text-accent-foreground'
-                          : 'border border-border text-muted-foreground'
+                          ? 'bg-accent text-accent-foreground shadow-sm'
+                          : 'border border-border/80 text-muted-foreground'
                       }`}
                     >
                       {String.fromCharCode(65 + optIdx)}
-                    </span>
-                    <div className="flex-1 text-sm sm:text-base font-serif">
+                    </div>
+                    <div className="flex-1 text-sm sm:text-base font-sans">
                       <MathRenderer content={opt.text} inline />
+                    </div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        isSelected
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-muted-foreground/30'
+                      }`}
+                    >
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </button>
                 );
@@ -478,13 +498,13 @@ export default function StudentTakePage() {
 
           {/* Open Auto (numeric/short text) */}
           {currentQ.type === 'open_auto' && (
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4 pt-1">
               <input
                 type="text"
                 value={currentAnswer?.value || ''}
                 onChange={(e) => handleUpdateCurrentAnswer(e.target.value)}
                 placeholder={t.student.openAnswerPlaceholder}
-                className="w-full touch-target px-4 rounded-2xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-accent text-foreground text-base font-mono"
+                className="w-full touch-target px-4 rounded-2xl border border-border/80 bg-background/80 focus:outline-none focus:ring-2 focus:ring-accent text-foreground text-base font-mono transition-all"
               />
               <MathKeyboard onInsert={handleInsertMath} />
             </div>
@@ -492,24 +512,24 @@ export default function StudentTakePage() {
 
           {/* Open Manual (solution textarea + optional photo upload) */}
           {currentQ.type === 'open_manual' && (
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4 pt-1">
               <textarea
                 rows={4}
                 value={currentAnswer?.value || ''}
                 onChange={(e) => handleUpdateCurrentAnswer(e.target.value)}
                 placeholder={t.student.manualAnswerPlaceholder}
-                className="w-full p-4 rounded-2xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-accent text-foreground text-sm"
+                className="w-full p-4 rounded-2xl border border-border/80 bg-background/80 focus:outline-none focus:ring-2 focus:ring-accent text-foreground text-sm transition-all"
               />
 
               <MathKeyboard onInsert={handleInsertMath} />
 
               {/* Photo Upload Section */}
-              <div className="pt-2 border-t border-border space-y-2">
+              <div className="pt-2 border-t border-border/60 space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground block">
                   {t.student.uploadPhoto}
                 </label>
                 <div className="flex flex-wrap items-center gap-3">
-                  <label className="touch-target inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-background hover:bg-muted text-xs font-semibold cursor-pointer transition-all">
+                  <label className="touch-target inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border/80 bg-background/80 hover:bg-muted text-xs font-semibold cursor-pointer transition-all active:scale-95">
                     <Upload className="w-4 h-4 text-accent" />
                     <span>
                       {uploadingPhoto ? t.student.uploading : 'Rasm tanlash / Kamera'}
@@ -525,7 +545,7 @@ export default function StudentTakePage() {
                   </label>
 
                   {currentAnswer?.photo_url && (
-                    <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/30">
+                    <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
                       <CheckCircle2 className="w-4 h-4" />
                       <span>{t.student.photoUploaded}</span>
                     </div>
@@ -538,14 +558,14 @@ export default function StudentTakePage() {
       </main>
 
       {/* Navigation Buttons */}
-      <footer className="sticky bottom-0 z-20 bg-background/90 backdrop-blur-md pt-3 pb-4 border-t border-border flex items-center justify-between gap-3 safe-pb">
+      <footer className="sticky bottom-0 z-20 bg-background/80 backdrop-blur-xl -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 border-t border-border/70 flex items-center justify-between gap-3 safe-pb">
         <button
           type="button"
           disabled={currentIndex === 0}
           onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-          className="touch-target flex-1 max-w-[140px] px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted text-foreground font-semibold flex items-center justify-center gap-1.5 disabled:opacity-30 transition-all"
+          className="touch-target flex-1 max-w-[130px] px-4 py-3 rounded-2xl border border-border/80 bg-card hover:bg-muted text-foreground font-semibold flex items-center justify-center gap-1.5 disabled:opacity-30 active:scale-95 transition-all text-sm"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4" />
           <span>{t.student.prev}</span>
         </button>
 
@@ -553,19 +573,19 @@ export default function StudentTakePage() {
           <button
             type="button"
             onClick={() => setShowFinishConfirm(true)}
-            className="touch-target flex-1 px-6 py-3 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition-all"
+            className="touch-target flex-1 px-6 py-3 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold flex items-center justify-center gap-1.5 shadow-glow active:scale-95 transition-all text-sm"
           >
-            <Flag className="w-5 h-5" />
+            <Flag className="w-4 h-4" />
             <span>{t.student.finish}</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-            className="touch-target flex-1 max-w-[140px] px-4 py-3 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+            className="touch-target flex-1 max-w-[130px] px-4 py-3 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold flex items-center justify-center gap-1.5 shadow-subtle active:scale-95 transition-all text-sm"
           >
             <span>{t.student.next}</span>
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         )}
       </footer>

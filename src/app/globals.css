@@ -5,46 +5,46 @@
 @tailwind utilities;
 
 :root {
-  /* Default: Dark mode values */
-  --background: #050507;
-  --foreground: #f3f4f6;
-  --card: #101014;
-  --card-foreground: #ffffff;
-  --border: #1f1f26;
-  --muted: #17171d;
-  --muted-foreground: #9ca3af;
+  /* Default: Dark mode (Deep OLED Pure Black Minimalism) */
+  --background: #000000;
+  --foreground: #f4f4f5;
+  --card: #0a0a0c;
+  --card-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.08);
+  --muted: #121216;
+  --muted-foreground: #82828e;
   --accent: #8b5cf6;
   --accent-hover: #7c3aed;
   --accent-foreground: #ffffff;
-  --accent-subtle: rgba(139, 92, 246, 0.15);
+  --accent-subtle: rgba(139, 92, 246, 0.12);
 }
 
 html.light {
   --background: #ffffff;
-  --foreground: #0f172a;
-  --card: #f8fafc;
-  --card-foreground: #0f172a;
-  --border: #e2e8f0;
-  --muted: #f1f5f9;
+  --foreground: #09090b;
+  --card: #f9fafb;
+  --card-foreground: #09090b;
+  --border: rgba(0, 0, 0, 0.08);
+  --muted: #f4f4f5;
   --muted-foreground: #64748b;
-  --accent: #8b5cf6;
-  --accent-hover: #7c3aed;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
   --accent-foreground: #ffffff;
-  --accent-subtle: rgba(139, 92, 246, 0.1);
+  --accent-subtle: rgba(124, 58, 237, 0.08);
 }
 
 html.dark {
-  --background: #050507;
-  --foreground: #f3f4f6;
-  --card: #101014;
-  --card-foreground: #ffffff;
-  --border: #1f1f26;
-  --muted: #17171d;
-  --muted-foreground: #9ca3af;
+  --background: #000000;
+  --foreground: #f4f4f5;
+  --card: #0a0a0c;
+  --card-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.08);
+  --muted: #121216;
+  --muted-foreground: #82828e;
   --accent: #8b5cf6;
   --accent-hover: #7c3aed;
   --accent-foreground: #ffffff;
-  --accent-subtle: rgba(139, 92, 246, 0.15);
+  --accent-subtle: rgba(139, 92, 246, 0.12);
 }
 
 body {
@@ -53,6 +53,7 @@ body {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
 }
 
 /* Mobile-first safe area insets */
@@ -78,10 +79,19 @@ body {
   user-select: none;
 }
 
+/* Hide scrollbar for clean horizontal navigator */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -92,4 +102,13 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
+}
+
+/* Smooth KaTeX inline formulas */
+.math-content .katex {
+  font-size: 1.05em;
+  text-rendering: auto;
+}
+.math-content .katex-display {
+  margin: 0.75em 0;
 }

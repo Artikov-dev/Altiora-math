@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "TestPlatform – Onlayn matematika nazorat ishlari",
@@ -21,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uz" suppressHydrationWarning>
+    <html lang="uz" suppressHydrationWarning className={inter.variable}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -42,7 +49,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-background text-foreground transition-colors duration-200">
+      <body className="bg-background text-foreground font-sans antialiased selection:bg-accent/20 selection:text-accent min-h-screen">
         <ThemeProvider>
           {children}
         </ThemeProvider>
