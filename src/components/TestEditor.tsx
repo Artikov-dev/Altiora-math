@@ -6,6 +6,7 @@ import { t } from '@/lib/i18n';
 import { MathRenderer } from '@/components/MathRenderer';
 import { MathKeyboard } from '@/components/MathKeyboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { compressImage } from '@/lib/imageCompressor';
 import { Question, QuestionType, QuestionOption } from '@/types';
 import {
   ArrowLeft,
@@ -22,6 +23,10 @@ import {
   ListOrdered,
   FileText,
   AlertTriangle,
+  Upload,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  X,
 } from 'lucide-react';
 
 interface TestEditorProps {
@@ -75,6 +80,9 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
 
   const [activeMathTarget, setActiveMathTarget] = useState<{ qIndex: number; optIndex?: number } | null>(null);
   const [showMathToolbar, setShowMathToolbar] = useState(false);
+  const [uploadingQIndex, setUploadingQIndex] = useState<number | null>(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkText, setBulkText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -198,6 +206,98 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
       newOptions[0].is_correct = true;
     }
     updateQuestion(qIndex, { options: newOptions });
+  };
+
+  const handleQuestionImageUpload = async (qIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingQIndex(qIndex);
+    try {
+      const compressedFile = await compressImage(file, 1600, 0.85);
+      const formData = new FormData();
+      formData.append('file', compressedFile);
+      const res = await fetch('/api/teacher/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        updateQuestion(qIndex, { image_url: data.url });
+      } else {
+        alert(data.error || 'Rasm yuklashda xatolik');
+      }
+    } catch {
+      alert('Rasm yuklashda xatolik yuz berdi');
+    } finally {
+      setUploadingQIndex(null);
+    }
+  };
+
+  const handleBulkImport = () => {
+    if (!bulkText.trim()) return;
+    const blocks = bulkText.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+    const parsedQuestions: Question[] = [];
+
+    blocks.forEach((block, idx) => {
+      const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+      if (lines.length === 0) return;
+
+      const firstLine = lines[0].replace(/^\d+[\.\)]\s*/, '').trim();
+      const optionLines = lines.filter((l) => /^[A-Ea-e][\.\)]\s*/.test(l));
+      const answerLine = lines.find((l) => /^(javob|answer|to'g'ri):\s*/i.test(l));
+
+      if (optionLines.length >= 2) {
+        const options: QuestionOption[] = optionLines.map((optLine, optIdx) => {
+          const isCorrect = /[\*\+]|\(to'g'ri\)|\(correct\)/i.test(optLine);
+          const cleanText = optLine
+            .replace(/^[A-Ea-e][\.\)]\s*/, '')
+            .replace(/[\*\+]|\(to'g'ri\)|\(correct\)/gi, '')
+            .trim();
+          return {
+            text: cleanText,
+            is_correct: isCorrect,
+            order_index: optIdx,
+          };
+        });
+
+        if (!options.some((o) => o.is_correct)) {
+          options[0].is_correct = true;
+        }
+
+        parsedQuestions.push({
+          type: 'multiple_choice',
+          prompt: firstLine,
+          points: 1,
+          order_index: questions.length + idx,
+          options,
+        });
+      } else if (answerLine) {
+        const cleanAnswer = answerLine.replace(/^(javob|answer|to'g'ri):\s*/i, '').trim();
+        parsedQuestions.push({
+          type: 'open_auto',
+          prompt: firstLine,
+          points: 1,
+          order_index: questions.length + idx,
+          accepted_answers: [cleanAnswer],
+        });
+      } else {
+        parsedQuestions.push({
+          type: 'open_manual',
+          prompt: lines.join(' ').replace(/^\d+[\.\)]\s*/, '').trim(),
+          points: 2,
+          order_index: questions.length + idx,
+        });
+      }
+    });
+
+    if (parsedQuestions.length > 0) {
+      setQuestions((prev) => [...prev, ...parsedQuestions]);
+      setBulkText('');
+      setShowBulkModal(false);
+      alert(`${parsedQuestions.length} ${t.builder.bulkImportSuccess}`);
+    } else {
+      alert("Savollar formatini aniqlab bo'lmadi. Namuna bo'yicha kiriting.");
+    }
   };
 
   // Math keyboard insertion
@@ -498,6 +598,16 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
 
               <button
                 type="button"
+                onClick={() => setShowBulkModal(true)}
+                className="touch-target px-3 py-1.5 rounded-xl text-xs font-semibold bg-accent-subtle hover:bg-accent/25 text-accent border border-accent/30 flex items-center gap-1.5 transition-all"
+                title="Savollarni matndan ommaviy yuklash"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>{t.builder.bulkImport}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleAddQuestion('multiple_choice')}
                 className="touch-target px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-accent-subtle hover:bg-accent/25 text-accent border border-accent/30 flex items-center gap-1.5 transition-all"
               >
@@ -636,6 +746,51 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
                   </div>
                 </div>
 
+                {/* Question Image (geometry/diagram) */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-accent" />
+                      <span>{t.builder.imageUrl}</span>
+                    </span>
+                    {q.image_url && (
+                      <button
+                        type="button"
+                        onClick={() => updateQuestion(qIdx, { image_url: null })}
+                        className="text-xs text-danger hover:underline flex items-center gap-1"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>{t.builder.removeImage}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {q.image_url ? (
+                    <div className="relative rounded-2xl overflow-hidden border border-border bg-background/50 p-2 max-w-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={q.image_url}
+                        alt="Savol rasmi"
+                        className="max-h-48 rounded-xl mx-auto object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <label className="touch-target inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-dashed border-border hover:border-accent bg-background hover:bg-muted text-xs font-semibold cursor-pointer transition-all">
+                      <Upload className="w-4 h-4 text-accent" />
+                      <span>
+                        {uploadingQIndex === qIdx ? 'Yuklanmoqda...' : t.builder.uploadImage}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingQIndex === qIdx}
+                        onChange={(e) => handleQuestionImageUpload(qIdx, e)}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
                 {/* Multiple choice options */}
                 {q.type === 'multiple_choice' && (
                   <div className="space-y-3 pt-2">
@@ -763,6 +918,67 @@ export function TestEditor({ initialData, isEdit = false }: TestEditorProps) {
           </button>
         </div>
       </form>
+
+      {/* Bulk Import Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-accent-subtle text-accent flex items-center justify-center">
+                  <FileSpreadsheet className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-base sm:text-lg">{t.builder.bulkImportTitle}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBulkModal(false)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {t.builder.bulkImportDesc}
+            </p>
+
+            <div className="p-3 rounded-xl bg-background/80 border border-border text-[11px] font-mono text-muted-foreground space-y-1">
+              <div>1. 2x + 6 = 14 tenglamani yeching.</div>
+              <div>A) 4 *</div>
+              <div>B) 3</div>
+              <div>C) 5</div>
+              <div className="pt-1">2. Kasrni hisoblang: 3/4 + 1/4</div>
+              <div>Javob: 1</div>
+            </div>
+
+            <textarea
+              rows={8}
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              placeholder="Savollarni shu yerga nusxalab qo'ying..."
+              className="w-full p-4 rounded-2xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-accent text-xs font-mono text-foreground"
+            />
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setShowBulkModal(false)}
+                className="px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted text-xs font-medium"
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkImport}
+                className="px-5 py-2 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground text-xs font-bold shadow-md transition-all active:scale-95"
+              >
+                {t.builder.bulkImportButton}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -65,12 +65,14 @@ export default function StudentLandingPage() {
     setLoading(true);
 
     try {
+      const existingToken = localStorage.getItem('exam_device_token') || undefined;
       const res = await fetch('/api/student/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code,
           student_name: studentName.trim(),
+          device_token: existingToken,
         }),
       });
 

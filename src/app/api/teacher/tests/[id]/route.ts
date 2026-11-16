@@ -167,3 +167,43 @@ export async function DELETE(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Ruxsat berilmagan' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { is_published } = body;
+
+    const { data: updatedTest, error: testError } = await supabase
+      .from('tests')
+      .update({
+        is_published: !!is_published,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', params.id)
+      .eq('teacher_id', user.id)
+      .select()
+      .single();
+
+    if (testError || !updatedTest) {
+      return NextResponse.json(
+        { error: testError?.message || 'Holatni yangilashda xatolik' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true, test: updatedTest });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Serverda xatolik yuz berdi';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

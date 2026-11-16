@@ -20,6 +20,8 @@ import {
   LogOut,
   FolderOpen,
   Share2,
+  Layers,
+  Power,
 } from 'lucide-react';
 
 export default function TeacherDashboardPage() {
@@ -27,6 +29,7 @@ export default function TeacherDashboardPage() {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [cloningId, setCloningId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
 
   const fetchTests = useCallback(async () => {
@@ -79,6 +82,45 @@ export default function TeacherDashboardPage() {
       }
     } catch (err) {
       console.error('Failed to delete test', err);
+    }
+  };
+
+  const handleToggleStatus = async (testId: string, currentStatus: boolean) => {
+    try {
+      const nextStatus = !currentStatus;
+      const res = await fetch(`/api/teacher/tests/${testId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_published: nextStatus }),
+      });
+      if (res.ok) {
+        setTests((prev) =>
+          prev.map((item) =>
+            item.id === testId ? { ...item, is_published: nextStatus } : item
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Failed to toggle test status', err);
+    }
+  };
+
+  const handleClone = async (testId: string) => {
+    try {
+      setCloningId(testId);
+      const res = await fetch(`/api/teacher/tests/${testId}/clone`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok && data.test) {
+        setTests((prev) => [data.test, ...prev]);
+      } else {
+        alert(data.error || 'Nusxa olishda xatolik yuz berdi');
+      }
+    } catch {
+      alert('Server bilan aloqa uzildi');
+    } finally {
+      setCloningId(null);
     }
   };
 
@@ -201,15 +243,19 @@ export default function TeacherDashboardPage() {
                     <span className="px-2.5 py-0.5 rounded-lg bg-accent/15 text-accent text-xs font-mono font-bold">
                       {test.code}
                     </span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-lg text-xs font-medium ${
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(test.id, test.is_published)}
+                      className={`touch-target px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 border ${
                         test.is_published
-                          ? 'bg-emerald-500/15 text-emerald-400'
-                          : 'bg-zinc-500/15 text-zinc-400'
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
+                          : 'bg-zinc-500/15 border-zinc-500/30 text-zinc-400 hover:bg-zinc-500/25'
                       }`}
+                      title={t.teacher.toggleStatus}
                     >
-                      {test.is_published ? t.teacher.published : t.teacher.draft}
-                    </span>
+                      <Power className={`w-3 h-3 ${test.is_published ? 'text-emerald-400' : 'text-zinc-400'}`} />
+                      <span>{test.is_published ? t.teacher.statusActive : t.teacher.statusInactive}</span>
+                    </button>
                   </div>
 
                   <h3 className="text-lg font-bold tracking-tight text-foreground">
@@ -260,6 +306,16 @@ export default function TeacherDashboardPage() {
                     <BarChart3 className="w-4 h-4" />
                     <span>{t.teacher.viewResults}</span>
                   </Link>
+
+                  <button
+                    type="button"
+                    disabled={cloningId === test.id}
+                    onClick={() => handleClone(test.id)}
+                    className="touch-target p-2 rounded-xl text-xs border border-border bg-background hover:bg-muted text-foreground transition-all flex items-center justify-center disabled:opacity-50"
+                    title={t.teacher.cloneTest}
+                  >
+                    <Layers className={`w-4 h-4 ${cloningId === test.id ? 'animate-spin' : ''}`} />
+                  </button>
 
                   <Link
                     href={`/teacher/tests/${test.id}/edit`}

@@ -3,7 +3,7 @@ import { getAdminClient } from '@/lib/supabaseAdmin';
 
 export async function POST(request: Request) {
   try {
-    const { code, student_name } = await request.json();
+    const { code, student_name, device_token: clientDeviceToken } = await request.json();
 
     if (!code || !student_name || typeof student_name !== 'string') {
       return NextResponse.json(
@@ -72,6 +72,14 @@ export async function POST(request: Request) {
 
         return NextResponse.json(
           { error: 'Test topshirish vaqti tugagan!' },
+          { status: 403 }
+        );
+      }
+
+      // Check device token collision
+      if (clientDeviceToken && clientDeviceToken !== existingAttempt.device_token) {
+        return NextResponse.json(
+          { error: 'Ushbu ism-familiya bilan boshqa qurilmada test boshlangan! Bitta nom bilan ikki qurilmadan kirish taqiqlanadi.' },
           { status: 403 }
         );
       }

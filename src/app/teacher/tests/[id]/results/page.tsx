@@ -15,6 +15,8 @@ import {
   Award,
   ChevronRight,
   Filter,
+  BarChart3,
+  TrendingUp,
 } from 'lucide-react';
 
 interface AttemptRow {
@@ -44,6 +46,13 @@ export default function TeacherTestResultsPage() {
   } | null>(null);
 
   const [attempts, setAttempts] = useState<AttemptRow[]>([]);
+  const [analytics, setAnalytics] = useState<{
+    total_participants: number;
+    average_score: number;
+    pass_rate: number;
+    hardest_question: { id: string; index: number; prompt: string; points: number; accuracy: number } | null;
+    questions_analytics: { id: string; index: number; prompt: string; points: number; accuracy: number }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'submitted' | 'auto_submitted' | 'in_progress'>('all');
@@ -60,6 +69,7 @@ export default function TeacherTestResultsPage() {
       const data = await res.json();
       if (data.test) setTest(data.test);
       if (data.attempts) setAttempts(data.attempts);
+      if (data.analytics) setAnalytics(data.analytics);
     } catch (err) {
       console.error('Failed to load results', err);
     } finally {
@@ -156,7 +166,7 @@ export default function TeacherTestResultsPage() {
       </header>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
             <Users className="w-4 h-4" />
@@ -168,12 +178,22 @@ export default function TeacherTestResultsPage() {
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
             <Award className="w-4 h-4" />
-            <span>O&apos;rtacha ko&apos;rsatkich</span>
+            <span>O&apos;rtacha natija</span>
           </div>
           <div className="text-2xl font-extrabold text-accent">{avgScore}%</div>
         </div>
 
-        <div className="col-span-2 sm:col-span-1 bg-card border border-border rounded-2xl p-4 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+            <TrendingUp className="w-4 h-4 text-emerald-400" />
+            <span>O&apos;tish ko&apos;rsatkichi (≥60%)</span>
+          </div>
+          <div className="text-2xl font-extrabold text-emerald-400">
+            {analytics ? `${analytics.pass_rate}%` : '-'}
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
             <ShieldAlert className="w-4 h-4 text-danger" />
             <span>Qoidabuzarliklar</span>
@@ -183,6 +203,60 @@ export default function TeacherTestResultsPage() {
           </div>
         </div>
       </div>
+
+      {/* Item Difficulty Analysis */}
+      {analytics && analytics.questions_analytics && analytics.questions_analytics.length > 0 && totalSubmissions > 0 && (
+        <div className="bg-card border border-border rounded-2xl p-5 mb-6 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-accent" />
+              <h3 className="font-bold text-sm">Savollar murakkabligi tahlili</h3>
+            </div>
+            {analytics.hardest_question && (
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-danger/10 text-danger border border-danger/20 font-semibold">
+                Eng qiyin savol: #{analytics.hardest_question.index} ({analytics.hardest_question.accuracy}% to&apos;g&apos;ri)
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+            {analytics.questions_analytics.map((qa) => {
+              const isHardest = analytics.hardest_question?.id === qa.id;
+              return (
+                <div
+                  key={qa.id}
+                  className={`p-3 rounded-xl border text-xs space-y-1.5 transition-all ${
+                    isHardest
+                      ? 'border-danger/40 bg-danger/5 shadow-sm'
+                      : qa.accuracy >= 70
+                      ? 'border-emerald-500/30 bg-emerald-500/5'
+                      : 'border-border bg-background'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-bold">
+                    <span>{qa.index}-savol</span>
+                    <span className={qa.accuracy >= 70 ? 'text-emerald-400' : qa.accuracy <= 40 ? 'text-danger' : 'text-amber-400'}>
+                      {qa.accuracy}%
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-border/40 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        qa.accuracy >= 70
+                          ? 'bg-emerald-500'
+                          : qa.accuracy <= 40
+                          ? 'bg-danger'
+                          : 'bg-amber-400'
+                      }`}
+                      style={{ width: `${qa.accuracy}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="bg-card border border-border rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3">
