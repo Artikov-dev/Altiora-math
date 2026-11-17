@@ -88,15 +88,36 @@ Tizimda ochiq o'qituvchi ro'yxatdan o'tish sahifasi mavjud emas (xavfsizlik tala
    - `Ctrl/Cmd + C, V, X, A, P, S, U`, `F12`, `Ctrl+Shift+I/J/C` va `PrintScreen` bloklanadi.
 5. **Bir nechta oynada ochish (Multi-tab)**:
    - `BroadcastChannel` orqali bitta urinish boshqa oynada ochilsa darhol aniqlanadi.
-6. **Yurak urishi (Heartbeat)**:
-   - Har 12 soniyada serverga ping yuboriladi. Aloqa 60 soniyadan ko'p uzilsa, shubhali faolsizlik deb qayd etiladi.
-7. **Ogohlantirish va Avto-topshirish**:
-   - Qoidabuzarlik sodir bo'lganda savollar blurlanadi va ogohlantirish modali chiqadi.
+6. **Yurak urishi va Jonli Kuzatuv (Heartbeat & Live Proctoring)**:
+   - Har 5 soniyada serverga real-time ping yuboriladi. O'qituvchi o'zining **Jonli Kuzatuv Zalida (`/teacher/tests/[id]/live`)** barcha o'quvchilarning ekrandagi faolligini, ayni qaysi savolda turganini va qolgan vaqtini soniyalar ichida ko'rib turadi.
+7. **Jonli Ogohlantirish va Majburiy Yakunlash (Live Warnings & Force Submit)**:
+   - O'qituvchi shubhali o'quvchiga jonli kuzatuv zalidan to'g'ridan-to'g'ri ogohlantirish yuborishi yoki testdan majburiy chetlashtirishi mumkin.
+8. **Avto-topshirish**:
    - O'qituvchi belgilagan limit (standart: 3) tugagach, test zudlik bilan server tomonidan `auto_submitted` holatiga o'tkaziladi.
 
 ---
 
-## 7. Ma'lum Cheklovlar (Known Limitations)
+## 7. Ilg'or O'qituvchi va O'quvchi Imkoniyatlari
+
+### 👨‍🏫 O'qituvchi uchun:
+- **Jonli Imtihon Zali (`/teacher/tests/[id]/live`)**: Real vaqtda barcha o'quvchilar holatini monitoring qilish, har bir o'quvchiga tezkor ogohlantirish yuborish yoki majburiy yakunlash.
+- **1-bosishda Test Holatini Boshqarish**: Testni istalgan payt `Faol` yoki `Nofaol (to'xtatilgan)` qilish.
+- **Testni Nusxalash (Test Clone)**: Bitta bosish bilan butun testni yangi kod bilan boshqa sinf uchun nusxalash.
+- **Savollarga Rasm Biriktirish**: Geometriya chizmalari, grafiklar va rasmlarni yuklash.
+- **Matndan Ommaviy Import Qilish (Bulk Import)**: Word yoki matnli fayldan o'nlab savollarni bir zumda testga yuklash.
+- **Savollar Murakkabligi Tahlili (Item Difficulty Analysis)**: Sinf eng ko'p adashgan qiyin savollarni foizlarda ko'rish.
+- **Natijalarni Eksport Qilish**: UTF-8 BOM qo'llab-quvvatlanuvchi Excel/CSV formatida eksport.
+
+### 🎓 O'quvchi uchun:
+- **Jonli KaTeX Formula Ko'rinishi**: Ochiq savollarda formula yozganda ifodaning to'g'ri shakllanishini real vaqtda ko'rish.
+- **Savollar Jadvali (Grid Drawer)**: 20-30 ta savolli testlarda istalgan savolga bir zumda sakrash imkoni.
+- **Mobil Klaviatura Moslashuvi**: Telefon klaviaturasi ochilganda aktiv maydonning avtomatik markazga siljishi (`visualViewport`).
+- **Kamera Rasmlarini Siqish**: 10-15 MB lik telefon kamera rasmlarini brauzerning o'zida <500 KB gacha tezkor siqish (`imageCompressor.ts`).
+- **Natija Varaqasini Chop Etish (Print / PDF)**: Test yakunlangach rasmiy sertifikat/natija varaqasini yuklab olish yoki qog'ozga chiqarish.
+
+---
+
+## 8. Ma'lum Cheklovlar (Known Limitations)
 
 Veb-platforma sifatida tizimning ob'ektiv cheklovlari mavjud:
 - **Ikkinchi jismoniy qurilma**: Talaba yonidagi ikkinchi telefon, qog'oz kitob yoki konspektdan foydalansa, veb-brauzer buni jismonan ko'ra olmaydi.
@@ -104,7 +125,7 @@ Veb-platforma sifatida tizimning ob'ektiv cheklovlari mavjud:
 
 ---
 
-## 8. Birlik Testlarini Ishga Tushirish
+## 9. Birlik Testlarini Ishga Tushirish
 
 Javoblarni matematik normallashtirish (`0,5` == `0.5`, `1/2` == `0.50`, bag'rikenglik oralig'i) va seedli deterministik aralashtirish funksiyalarini sinash:
 ```bash
@@ -113,7 +134,7 @@ npm run test
 
 ---
 
-## 9. Vercel'ga Joylash (Deployment)
+## 10. Vercel'ga Joylash (Deployment)
 
 1. Loyihani GitHub'ga yuklang: `https://github.com/Artikov-dev/Altiora-math`.
 2. [Vercel.com](https://vercel.com) ga kiring va GitHub repozitoriyani import qiling.

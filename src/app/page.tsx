@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { t } from '@/lib/i18n';
@@ -32,12 +33,12 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <a
+          <Link
             href="/teacher/login"
             className="touch-target px-4 py-2 rounded-xl text-sm font-medium border border-border bg-card hover:bg-muted text-foreground transition-all flex items-center gap-1.5"
           >
             {t.auth.teacherLogin}
-          </a>
+          </Link>
         </div>
       </header>
 
